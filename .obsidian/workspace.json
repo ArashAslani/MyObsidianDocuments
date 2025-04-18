@@ -11,13 +11,28 @@
             "id": "7b0f692d5e1b393f",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "New tab"
+              "type": "image",
+              "state": {
+                "file": "C#/Images/Pasted image 20250402133136.png"
+              },
+              "icon": "lucide-image",
+              "title": "Pasted image 20250402133136"
+            }
+          },
+          {
+            "id": "78127ef3e0c0786d",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "C#/Images/Pasted image 20250402135046.png"
+              },
+              "icon": "lucide-image",
+              "title": "Pasted image 20250402135046"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -90,16 +105,17 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "C#/Images/Pasted image 20250402135046.png",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
                 "showSearch": false,
                 "searchQuery": "",
-                "backlinkCollapsed": false,
+                "backlinkCollapsed": true,
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for Pasted image 20250402135046"
             }
           },
           {
@@ -108,11 +124,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "C#/Images/Pasted image 20250402135046.png",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links"
+              "title": "Outgoing links from Pasted image 20250402135046"
             }
           },
           {
@@ -136,12 +153,13 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "C#/Images/Pasted image 20250402135046.png",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline"
+              "title": "Outline of Pasted image 20250402135046"
             }
           },
           {
@@ -172,6 +190,17 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "7b0f692d5e1b393f",
-  "lastOpenFiles": []
+  "active": "6a92fd940e99b454",
+  "lastOpenFiles": [
+    "C#/Images/Pasted image 20250402133136.png",
+    "C#/Images/Pasted image 20250402135046.png",
+    "C#/2025-04-18.md",
+    "C#/2025-04-01.md",
+    "C#/Untitled 1.canvas",
+    "C#/Untitled.canvas",
+    "C#/Untitled 2.canvas",
+    "C#/Untitled 3.canvas",
+    "C#/Untitled 4.canvas",
+    "C#/Untitled 5.canvas"
+  ]
 }
