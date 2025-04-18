@@ -1,0 +1,22 @@
+{
+	"nodes":[
+		{"id":"991b2949fba7a96d","x":-48,"y":-231,"width":250,"height":60,"type":"text","text":"بازار سرمایه"},
+		{"id":"c9745675efd0dbbf","type":"text","text":"خانوار","x":-476,"y":-348,"width":250,"height":60},
+		{"id":"2ef518d626279557","type":"text","text":"بازار عرضه کالا و خدمات","x":-476,"y":58,"width":250,"height":60},
+		{"id":"a307d2d0db557d1e","x":239,"y":-348,"width":250,"height":60,"type":"text","text":"بازار کار"},
+		{"id":"ad9d19cdce354e78","x":239,"y":58,"width":250,"height":60,"type":"text","text":"بنگاه های اقتصادی"}
+	],
+	"edges":[
+		{"id":"1aab92cafe2754ac","fromNode":"c9745675efd0dbbf","fromSide":"right","toNode":"a307d2d0db557d1e","toSide":"left"},
+		{"id":"18aef667f830ca3e","fromNode":"a307d2d0db557d1e","fromSide":"bottom","toNode":"ad9d19cdce354e78","toSide":"top"},
+		{"id":"d707edb568096efe","fromNode":"ad9d19cdce354e78","fromSide":"left","toNode":"2ef518d626279557","toSide":"right"},
+		{"id":"9ddb7ccc74c86c32","fromNode":"2ef518d626279557","fromSide":"top","toNode":"c9745675efd0dbbf","toSide":"bottom"},
+		{"id":"2e9630be79918f36","fromNode":"c9745675efd0dbbf","fromSide":"bottom","toNode":"2ef518d626279557","toSide":"top","label":"کالا و خدمات و مخارج"},
+		{"id":"10b7ddd31fe56e68","fromNode":"ad9d19cdce354e78","fromSide":"top","toNode":"a307d2d0db557d1e","toSide":"bottom","label":"پرداخت دستمزد و"},
+		{"id":"19599889fbe1c948","fromNode":"a307d2d0db557d1e","fromSide":"left","toNode":"c9745675efd0dbbf","toSide":"right","label":"نیروی کار و درآمد"},
+		{"id":"6bc01e7c77f85563","fromNode":"2ef518d626279557","fromSide":"right","toNode":"ad9d19cdce354e78","toSide":"left"},
+		{"id":"8a7daa4e41547e88","fromNode":"c9745675efd0dbbf","fromSide":"bottom","toNode":"991b2949fba7a96d","toSide":"left","color":"3","label":" پس انداز و سود"},
+		{"id":"183a7358540a8335","fromNode":"991b2949fba7a96d","fromSide":"bottom","toNode":"ad9d19cdce354e78","toSide":"left","color":"2","label":"تسهیلات و مازاد مخارج"},
+		{"id":"a1836a0b46911e3b","fromNode":"991b2949fba7a96d","fromSide":"left","toNode":"c9745675efd0dbbf","toSide":"bottom"}
+	]
+}
