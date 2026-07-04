@@ -1,203 +1,614 @@
+# Concurrency و Multi-Threading در C#
 
-Concurrency and asynchrony in C#
+## 1. Interview Relevance Summary
 
-Proccess : هر اپلیکیشنی که در سیسیتم عامل اجرا شده است.
-هر پروسس میتواند single Tread باشد یا Multi Tread باشد.
-که درای یک مموری جدای از proccess دیگر هست.
-روی سیستم عامل چندین پروسس میتوانند به صورت Concurrent اجرا و execute شوند.
-چند الگوریتم برای الویت بندی پروسه ها و اجرای cocurrent پروسه ها وجود دارند.
-Fifo : اگر پروسه ای شروع بشه asign میشه به cpu و cpu شروع میکنه به excute کردن. حالا بسته به زمان لازم برای اجرا، Cpu طبق الویت که اولین ورودی باید کارش تموم شه تا بعدی اجرا شود این کار را انجام میدهد. یعنی اولی تا excute نشود بعدی اجرا نمیشود و پروسه های بعد آن دچار قحطی زدگی میشوند.
+موضوع Concurrency و Multi-threading یکی از **بحرانی‌ترین** مباحث در مصاحبه‌های Backend Developer است. مصاحبه‌کنندگان انتظار دارند که کاندیدا:
 
-![[Pasted image 20240221103510.png]]
+- تفاوت بین Process و Thread را بداند
+- مفهوم Thread safety و Race condition را درک کند
+- بداند چه زمانی از Thread، Task یا async/await استفاده کند
+- Synchronization primitives مختلف را بشناسد و trade-off‌های آن‌ها را بداند
+- بتواند Deadlock را تشخیص دهد و از آن جلوگیری کند
+- Performance implications را درک کند
 
-sjf :
-shorted job first - در این الگوریتم cpu اول پروسه ای که کمترین زمان را نیاز دارد انجام میدهد. و همینطور به ترتیب پروسه های بعدی.
-اگر پروسه ای داریم که unlimit هست در این الگوریتم در صورت داشتن پروسه های زیاد هیچوقت نوبت پروسه unlimit نمیشود و اجرا نمیشود.
-![[Pasted image 20240221103808.png]]
+**نکته مهم**: در مصاحبه‌های Senior-level، فقط دانستن syntax کافی نیست. باید بتوانید **چرا** و **چه زمانی** از هر ابزار استفاده کنید.
 
+---
 
-round robin :
-عادلانه و faired تر هست. اگر پروسه ها متعددی داشته باشیم برای هر پروسه یک یا چند تایم فریم کوچک در صف ایجاد میکند تا به صورت رندوم تمام تایم فریم ها و execute ها کامل شوند.
-![[Pasted image 20240221104112.png]]
+## 2. Process و Thread: مفاهیم پایه
 
-اینقدر اجرای این تایم لاین ها سریع ها فکر میکنیم که برنامه ها دارد به صورت concurrent اجرا میشوند.
-فرض اینجا هست که کامپیوتر دارای 1cpu و 1 core هست.
+### Process چیست؟
 
-یک cpu چطور execute میکند. 
-زمانی که یک روی یک برنامه کلیک میکنیم برنامه شروع به ایجاد شدن میکند: رم اشغال میکند - ترد و مین ترد هارا ایجاد میکند، و متادیتا ها ثبت میشوند تا به حالت execute برود.
+**Process** یک نمونه اجرا شده از یک برنامه در سیستم عامل است. هر Process:
 
-بعد آن صفی وجود دارد که پروسه داخل ان قرار میگیرد و در داخل ران تمام سویچ ها ترد ها و حافظه را میگیرد و شروع به xecute میکند اگر کوانتوم آن تموم شد دوباره ان را به ته صف میرود.
-اگر درخواست i/o داشته باشیم پروسه به صف wait/block میرود به اصطلاح I/O bound اتفاق می افتد و صبر میکند تا ورودی مد نظر گرفته شود تا پروسس execute شود و دوباره به صف Ready برگردانده میشود.
-اگر در صف i/o بودیم و رم پر شده و پروسه پر الویتی میاد os پروسه را از wait/block بر میدارد و به Suspend wait  میبرد  تا حتی اگر دستور i/o پروسه بیاید پروسه به صف ready نردو و execute نشود.
-حالا اگر رم ازاد شد آن را به Suspend Ready میبرد تا به داخل صف Ready  برود.
-و این چرخه ادامه دارد.
+- دارای **حافظه جداگانه** است (isolated memory space)
+- می‌تواند **single-threaded** یا **multi-threaded** باشد
+- توسط سیستم عامل مدیریت می‌شود
 
-![[Pasted image 20240221104858.png]]
+**چرا این مهم است؟** در مصاحبه، اگر بپرسند "چرا Processها حافظه جداگانه دارند؟" باید بگویید: **ایزولیشن و امنیت**. اگر یک Process crash کند، Processهای دیگر تحت تأثیر قرار نمی‌گیرند.
 
-یک پروسس زمانی که اجرا میشوند درونشون یک ترد هست. که اسم آن Main Thread هست.
-که مسئول اجرای کد هست و سیستم عامل ان را ایجاد میکند.
-  single thread program and multi thread process 
-   هر ترد دارای یک stack register هستند.
-   در کنار main ترد دو ترد دیگر توسط clr ایجاد میشود برای GC و Finalization در کنار main ترد وجود دارند و چون پروسس روی یک ترد اجرا میشود همان single thread هست.
-![[Pasted image 20240221113051.png]]
+### Thread چیست؟
 
-در Code اگر یک ترد تعریف شود به علاوه main ترد یک ترد دیگر ایجاد میشود در پروسس و کار مورد نظر پروسس جدید را انجام میدهد.
-![[Pasted image 20240221114840.png]]
+**Thread** کوچک‌ترین واحد اجرا (execution unit) است که توسط سیستم عامل زمان‌بندی می‌شود. هر Process حداقل یک Thread دارد که **Main Thread** نامیده می‌شود.
 
-حتی در فضای مالتی ترد هم راند رابین شکل میگیرد.
-![[Pasted image 20240221115119.png]]
+**تفاوت کلیدی**:
+- Processها حافظه جداگانه دارند
+- Threadهای یک Process **حافظه مشترک** دارند (Heap مشترک)
+- هر Thread **Stack جداگانه** دارد
 
-در Thread ها مثل procces ها امکان ساسپند و بلاک شدن وجود دارد.
-با استفاده از join کردن به پروسس میگوییم که برای ترد مد نظر ما صبر کن تا کارش تموم بشه و بعد ادامه بده. و عملا main Thread را بلاک میکنیم.
-![[Pasted image 20240221115433.png]]
+---
 
-زمانی که حرف از Blocking میشود دو نوع را میتوان نام برد :
-I/O bound : نیازمند یک دیتا و ریسورس هست
-Cpu or Compute bound : منتظر یک ترد هست تا محاسباتش تموم شه تا ترد دوباره اجرا بشه.
-شرایط بالا حالت cpu bound هست.
+## 3. CPU Scheduling Algorithms
 
-فضایی که یک ترد
-بلاک شود تا منتظر یک ریسورس یا یک ترد دیگر باشد و به Thread pool اصلی خود برنگردد فضای sync میگویند.
-یعنی ترد اول بلاک شود منتظر سیگنال یا کال بک ترد دوم می ماند تا به راه خود ادامه دهد.
+سیستم عامل از الگوریتم‌های مختلفی برای زمان‌بندی Processها استفاده می‌کند:
 
-و اگر ترد بلاک نشه و ترد برگرده به thread poll و منتظر یک سیگنال و کال بک  از طرف یک ترد دیگه که به خاطر I/o بلاک شده باشه تا کارشو مجدد شروع کنه و با همون round robin کار هندل بشه محیط async هستیم.
+### FIFO (First In First Out)
 
+- Processها به ترتیب ورود اجرا می‌شوند
+- **مشکل**: اگر یک Process طولانی باشد، Processهای بعدی دچار **Starvation** می‌شوند
+- **استفاده**: در سیستم‌های ساده یا real-time systems با deadline مشخص
 
-![[Pasted image 20240221131532.png]]
+### SJF (Shortest Job First)
 
-LOCAL and Shared state on Thread
-پروسس دارای memory برای خودش هست که ساختار stack و heap هست.
-در هر ترد یک حافظه Stack مجزا وجود دارد.
-یعنی دارای local state هست
-و Stack بین ترد ها متفاوت و همه Heap یکسان دارند.
-به خاطر GC هرکدوم Heap ندارند چون نمیتواند بره تو هر ترد داخل هیپش بگرده.
-و ترد حافظه stack مموری رو خودش کنترل میکنه.
+- Process با کمترین زمان اجرا اول اجرا می‌شود
+- **مشکل**: Processهای طولانی ممکن است هرگز اجرا نشوند (Starvation)
+- **استفاده**: در سیستم‌هایی که می‌توان زمان اجرا را تخمین زد
 
-اگر یک فانکشن را با Thread ها متفاوت اجرا کنیم. چطور میشود که هر دو فرضا هزار کراکتر چاپ میکنند و روی هم تاثیر ندارند؟
-به خاطر اینکه اسکوپ فانکشن در هر ترد داخل Stack های مجزای خودشون قرار میگیرند و در هر کوانتوم و Content switch ترد ها از حافظه Local state خودشون فانکشن رو اجرا میکنند.
- برای از بین نرفتن موقعیت interrupt یا نگهداری اخرین خط کدی که هر ترد ایجاد کرده کنار stack یک Pc Register وجود داره که آدرس اخرین خط اجرا شده ترد را نگه میدارد.
-![[Pasted image 20240221134957.png]]
+### Round Robin
 
-Stack main tread همان استک پروسس هست و ترد های بعدی هر کدام Stack مخصوص به خودشون رو دارن.
-در این مثال _finished _ یک متغیر برای main thread هست که برای ترد جدید share میشود.
-در اینجا اگر یک thread شروع به اجرای تابع run کند به خاطر اینکه یکبار finished به true تبدیل شده ترد بعدی قادر به رفتن به لوپ نیست و خارج میشود.
+- هر Process یک **time quantum** (مثلاً 10ms) دریافت می‌کند
+- بعد از تمام شدن quantum، Process به انتهای صف می‌رود
+- **مزیت**: عادلانه‌تر است و از Starvation جلوگیری می‌کند
+- **نکته مهم**: Round Robin **تصادفی نیست**، بلکه **deterministic** و **fair** است
 
-![[Pasted image 20240221154207.png]]
+**چرا این مهم است؟** در مصاحبه، اگر بگویید "Round Robin به صورت random اجرا می‌کند"، این یک **red flag** است. Round Robin کاملاً deterministic است.
 
-در مثال زیر زمانی که وارد حلقه میشویم و ترد جدیدی ایجاد میکنیم. ممکن هست که در mainthread که حلقه هست ایندکس به 3 یا 4 برسد و بعد content switch اتفاق بیوفتد و عملیات چاپ انجام شود یعنی خروجی ممکن است اینگونه باشد:
-12356888910
-![[Pasted image 20240221155132.png]]
+---
 
-میتوان در ترد ها الویت بندی کرد :
-![[Pasted image 20240221155429.png]]
+## 4. Process States و Lifecycle
 
-Lock vs Monitor vs Mutex and semaphore
+یک Process می‌تواند در حالت‌های مختلفی باشد:
 
-به ترد ها معمولا worker thread هم میگویند.
+```
+New → Ready → Running → Waiting/Blocked → Terminated
+         ↑         ↓            ↓
+         └─────────┴────────────┘
+```
 
-lock : اگر یک ترد ریسورس r1 را دارد حالا یک ترد دیگر r2 در دسترس ترد دوم هست.
-به این cyrcle 
-dev lock میگویند در حوضه سیستم عامل
-![[Pasted image 20240221170707.png]]
+### حالت‌های مهم:
 
-میتوانیم جایی که نیاز به ریسور مشترک هست با استفاده از مانیتور این مشکل را حل کنیم.
-monitor enter را در بالایی که مشکوک به خطا هست میگذاریم و monitor.exit را پایین آن صدا میزنیم.
-حالا فرض کنیم که عملیات مشکوک ما موقع اجرا به خطا خورده.
-الان ترد دوم باید به ریسورس دسترسی داشته باشد ولی ریسورس توسط مانیتور لاک شده برای ترد اول لاک شده پس برای آن را داخل try  finaly قرار میدهیم تا درصورت بروز مشکل ریسورس از لاک خارج شود.
-به جا این کار میتوان از بلاک lock استفاده کرد و در کامپایل به همان روش بالا تبدیل میشوند.
+1. **Ready**: Process آماده اجرا است و منتظر CPU است
+2. **Running**: Process در حال اجرا روی CPU است
+3. **Waiting/Blocked**: Process منتظر یک event است (مثلاً I/O)
+4. **Suspended**: Process از حافظه اصلی به disk منتقل شده (swapping)
 
-![[Pasted image 20240221172511.png]]![[Pasted image 20240221172651.png]]
+**I/O Bound vs CPU Bound**:
 
+- **I/O Bound**: Process منتظر I/O است (مثلاً خواندن از فایل، network call)
+- **CPU Bound**: Process نیاز به محاسبات CPU دارد
 
-گاهی ممکن هست یک ریسورس application wide نباشند os wide باشند یعنی یک ریسورس در سطح یک سیستم عامل بین دو اپلیکشین مشترک هست باید از Mutex اسفتاده کنیم.
-پس فرق monitor و mutex در internal thread و external thread هست.
-در اینجا تمام عملیات ها لاک روی یک ترد انجام میشود.
-![[Pasted image 20240221172945.png]]
+**چرا این مهم است؟** در async programming، باید بدانید که async/await برای **I/O-bound** کارها مناسب است، نه CPU-bound. در **ASP.NET Core** اگر کار CPU-bound را با `Task.Run` به thread pool بفرستید، در عمل همان poolی را که برای سرو کردن درخواست‌ها استفاده می‌شود مشغول می‌کنید و می‌تواند به **thread pool starvation** و کاهش throughput منجر شود؛ برای کار سنگین CPU در سمت سرور معمولاً راه‌حل‌های جدا (مثلاً background service روی thread جدا، یا queue و worker) در نظر گرفته می‌شود.
 
+---
 
-SemaphorSlim
-میگوید که روی یک پروسس بیشتر n ترد نتوانند کار کنند. در روش بالا روی یک ریسورس فقط یک ترد کار میکرد حالا در اینجا چندین ترد روی یک ریسورس کار میکنند که با استفاده از SemaphorSlim این را کنترل میکنیم.
-روی intenal threads
-Semaphor روی External Threads کار میکند.
+## 5. Thread در .NET
 
-![[Pasted image 20240221173345.png]]
+### Main Thread
 
-deadlock فقط روی یک فایل نیست و میتواند روی دیتابیس ارتباط بین دیتابیس باشد.
-مثلا با استفاده از یک عملیات بکگراند تعداد 10کاربر از دیتابیس میخوانیم و انهارا تغییر میدهیم و پیام ارسال میکنیم.
-زمانی که یک ترد در بکگراند دارد واکشی میکند و عملیات را روی دیتا ها انجام میدهد ممکن هست قبل save changes یک content seitch اتفاق بیوفتد و ترد دوم همان ده کاربر قبلی را واکشی کند و به خروجی دهد حالا پیام به همان ده نفر دوبار ارسال میشود.
-برای حل مشکل جای حساس را شناسای کرده و باید به روش های بالا با monitor یا lock عملیات را لاک کرد.
+هر Process در .NET حداقل یک Thread دارد که **Main Thread** نامیده می‌شود. این Thread:
 
-Task and Thread Pool
+- توسط CLR ایجاد می‌شود
+- مسئول اجرای کد اصلی برنامه است
+- در Console apps، UI apps و Web apps وجود دارد
 
-thread ها در حالت کلی دو حالت
-background و 
-foreground دارند.
-فرق عملی و ساختاری ندارند. 
-تفاوت در این هست که اگر یک پراسس اجرا شود و کارش تموم شده باشه و بخواد خودشو کیل کنه اگر ترد foreground داشته باشه حتی اگر به اخر اگزکیوشن رسیده باشه برنامه تمام نمیشود و پروسس وابسته به ترد های foreground هست ولی زمان اگزکیوشن تمام ترد های backgound بسته میشوند و به پایان میرسند.
-![[Pasted image 20240221202139.png]]
-ترد ها به صورت پیشفرض foreground اجرا میشوند که میتوان روی ترد .IsBackground را صدا زد.
+**نکته**: در کنار Main Thread، CLR Threadهای دیگری هم برای **GC** و **Finalization** ایجاد می‌کند، اما این Threadها برای منطق برنامه نیستند.
 
-ایجاد و حذف یک ترد برای اپلیکشن ها هزینه بر هست از این نظر که Clr دائم باید یک فضای stack متادیتا و ... داخل مموری allocate کند و دوباره حذف کند. همچنین ریترن کردن در ترد ها سخت هست چرا که داخل ترد Delegate void داریم. 
-و همچنین خیلی سطح پایین هست و دائم باید با clr صحبت کنیم که ترد ایجاد کن و ببند.
-این مشکل تعدد ایجاد و خروج از ترد ها را میتوان با Thread pool ها حل کرد.
+### Single-Threaded vs Multi-Threaded
 
-میتوانیم یک استخر ترد داشته باشیم به صورت پیشفرض مثلا 4 ترد داریم.
-زمانی که پروسس ایجاد میشود Clr برود ترد هارا بسازد و زنده بمانند تا برنامه بسته شود.
-در این حالت کار به یک ترد سپرده میشود و وقتی کارش تمام شد به ته صف میرود.
-در این حالت دیگر over head ساختن و destroy کردن ترد هارا نداریم.
+- **Single-threaded**: فقط Main Thread کار را انجام می‌دهد
+- **Multi-threaded**: چند Thread همزمان کار می‌کنند
 
-ترد پول ها از جنس Background هستند چرا که باید زمان خروج از برنامه باید بسته شوند.
+**مثال**:
+```csharp
+// Single-threaded
+void DoWork() {
+    // همه کارها روی Main Thread
+}
 
-![[Pasted image 20240221210024.png]]
+// Multi-threaded
+void DoWork() {
+    var thread = new Thread(() => {
+        // کار روی Thread جداگانه
+    });
+    thread.Start();
+}
+```
 
-در dotnet framework 4 عملیات Task به وجود امد.
-Task یک thread نیست.
-در این حالت ما در سطح بالا این کار را انجام میدهیم.
-در اینجا Task ها به thread pool کار میکنند. به صورت Queue وارد thread pool میشود.
-در این حالت ما فشار ایجاد و حذف ترد هارا روی clr نداریم و همچنین عملیات ها به صورت concurency انجام میشوند.
-task ها یک ماهیت short runing دارند.
-مثلا اگر در Thread pool که شامل 4 thread باشد. و 6 task longدر صف داشته باشیم.
-4 عمل روی 4 ترد در حالت اکزکیوت قرار میگیرند و بقیه task ها wait میخورند.
-پس نباید task ها کار های سنگین و long runing انجام بدهند .
-یک ویژگی دیگر این هست که TAsk ها قابلیت کنسل شدن دارند. به دلیل ترد پول چرا که Background هستند و قابلیت kill شدن دارند.
-![[Pasted image 20240221210841.png]]
-اگر بخواهیم از long runing استفاده کنیم.
-میتوانیم از Factory استفاده کنیم به معنی اینکه بگوییم این task روی یک Thread مجزا کار کند و روی thread pool دیگه کار انجام نمیشود.
+---
 
-![[Pasted image 20240221211557.png]]
+## 6. Thread Memory Model: Stack و Heap
 
-همچنین میتوان Task هارا مانند thread ها که join میکردیم wait کنیم. تا عملیات های دیگر منتظر جواب ان باشند.
-بعد از اتمام کار یک سیگنال میاد که به برنامه میگه ادامه بده.
+### Stack (Local State)
 
-به صورت کلاسیک async کردن عملیات ها به وسیله Task ها به صورت صدا زدن .GetAwaiter رو تابع مورد نظر هست که برای اینکه سیگنال I/O Bound را دریافت کنیم تا عملیات های دیگر در این وقفه توسط ترد آزاد شده اجرا شوند از >OnComplented استفاده میکنیم.
-در نسل جدید از متد Async و Convention await پشت متد های مورد نظر استفاده میکنیم.
-که در زمان Compile متد های async به صورت کلاسیک ترجمه میشوند.
-و همین کد های کلاسیک زمانی که به IL تبدیل میشوند داخل یک State قرار میگیرند تا مدیریت ترد هارا انجام دهند.
+- **هر Thread یک Stack جداگانه دارد**
+- متغیرهای local و پارامترهای function در Stack ذخیره می‌شوند
+- Stack توسط Thread خودش مدیریت می‌شود
 
-در اینجا await باعث میشود که در زمان آزاد شدن تردی که به i/o bound رسیده سیگنالی به بقیه عملیات برسد تا به کار خورد روی ترد آزاد شده ادامه دهند.
+### Heap (Shared State)
 
-![[Pasted image 20240221213756.png]]
+- **همه Threadهای یک Process Heap مشترک دارند**
+- Objects در Heap ذخیره می‌شوند
+- **نکته مهم**: Heap مشترک است نه به خاطر GC، بلکه به خاطر **طراحی Process model**. GC فقط Heap مشترک را مدیریت می‌کند.
 
+**چرا این مهم است؟** اگر در مصاحبه بگویید "Heap مشترک است چون GC نمی‌تواند به Stack هر Thread دسترسی داشته باشد"، این **نادرست** است. Heap مشترک است چون همه Threadها بخشی از یک Process هستند.
 
-Cancellation Token
-قدرت js و nodejs هم در همین زیر ساخت async هست.
+### Context Switching
 
-در long ruining task ها نباید sync باشند و ترد نباید منتظر بماند.
-پس  long running ها را باید به تسک های کوچک تبدیل کرد.
-تسک های async- await بعد از ایجاد شدن داخل صف میروند و داخل ترد پول شروع به اجرا شدن میکنند. در زمان انتظار ترد ازاد میشد و با اومدن سیگنال کال بک ترد جدیدی برای ادامه کار تسک میومد تا http call یا کار دیگری بکند.
-![[Pasted image 20240222133522.png]]
+وقتی سیستم عامل از یک Thread به Thread دیگر می‌رود:
 
-ایراد این هست که اگر فرض بگیریم یک کلایت ریکوئستی بزنه به سرور که لانگ رانینگ هست. و مثلا سه تسک داخل لانگ رانینگ هست.
-حالا کاربر منتظر دریافت پاسخ هست ولی حوصلش سر میره و از مرور گر خارج میشه یا سیستمش خاموش میشه.
-سرور متوجه قطع شدن ارتباط میشود ولی تسک ها همچنان در حال انجام شدن هستند.
-حالا اگر سرور یجوری به تسک ها اطلاع بده که کار کنسل شده کاربرد cancelation tokens به کار می آید.
-![[Pasted image 20240222133858.png]]
+1. State فعلی Thread (register values, stack pointer) ذخیره می‌شود
+2. State Thread جدید بارگذاری می‌شود
+3. **PC Register** آدرس آخرین دستور اجرا شده را نگه می‌دارد
 
-در اصل یک ابجکت کوچک هست که ماهیت true, false دارد. به صورت گلوبال هستند و به همه تسک ها پاس داده میشوند.
-تسک ها به نگاه کردن به کنسلشن توکن متوجه میشوند که کار کنسل شده یا نه.
-که یک کلاس به اسم کنسلیشن توکن سورس میسازد.
-![[Pasted image 20240222134148.png]]
-![[Pasted image 20240222134329.png]]
+**هزینه Context Switch**: Context switching هزینه دارد. به همین دلیل است که Thread Pool استفاده می‌شود تا از ایجاد/حذف مکرر Threadها جلوگیری شود.
 
- 
+---
 
+## 7. Shared State و Race Conditions
+
+### مشکل Race Condition
+
+وقتی چند Thread به یک shared resource دسترسی دارند، ممکن است **Race Condition** رخ دهد:
+
+```csharp
+int counter = 0;
+
+void Increment() {
+    counter++; // این operation atomic نیست!
+}
+```
+
+**چرا مشکل است؟** `counter++` در واقع سه operation است:
+1. خواندن مقدار counter
+2. افزایش آن
+3. نوشتن مقدار جدید
+
+اگر دو Thread همزمان این کار را انجام دهند، ممکن است یکی از incrementها از دست برود.
+
+**راه حل**: برای عملیات ساده (مثل counter) از **Interlocked** استفاده کنید؛ برای critical sectionهای پیچیده‌تر از lock یا سایر primitiveها (بعداً توضیح داده می‌شود).
+
+### Interlocked و volatile
+
+برای عملیات **تک‌گام** روی یک متغیر، استفاده از `Interlocked` از lock سبک‌تر و مناسب‌تر است:
+
+```csharp
+int counter = 0;
+
+void SafeIncrement() {
+    Interlocked.Increment(ref counter);
+}
+```
+
+- **Interlocked**: متدهایی مثل `Increment`, `Decrement`, `Add`, `CompareExchange` — همه **atomic** روی آن نوع هستند. برای counter و فلگ ساده در مصاحبه و production هر دو گزینهٔ درست است.
+- **volatile**: به compiler و runtime می‌گوید که این متغیر ممکن است توسط چند thread عوض شود؛ از cache کردن خواندن در یک thread جلوگیری می‌کند. **نکته**: برای visibility کافی است، ولی برای read-modify-write (مثل `counter++`) کافی نیست — آنجا باید از Interlocked یا lock استفاده کنید.
+
+**چرا در مصاحبه مهم است؟** اگر بگویید «همیشه برای thread safety از lock استفاده می‌کنم» و برای یک counter ساده lock بزنید، مصاحبه‌گر ممکن است بپرسد آیا راه سبک‌تری سراغ دارید؛ جواب درست **Interlocked** است.
+
+---
+
+## 8. Synchronization Primitives
+
+### Lock (Monitor.Enter/Exit)
+
+**Lock** ساده‌ترین روش برای synchronization است:
+
+```csharp
+private readonly object _lockObject = new object();
+
+void SafeIncrement() {
+    lock (_lockObject) {
+        counter++;
+    }
+}
+```
+
+**نکات مهم**:
+- `lock` در compile time به `Monitor.Enter` و `Monitor.Exit` تبدیل می‌شود
+- همیشه از `try-finally` استفاده می‌شود تا در صورت exception، lock آزاد شود
+- **هرگز** روی `this` یا `typeof(MyClass)` lock نکنید (deadlock risk)
+
+**مثال اشتباه**:
+```csharp
+// ❌ بد
+lock (this) { ... }
+
+// ✅ خوب
+private readonly object _lock = new object();
+lock (_lock) { ... }
+```
+
+### Monitor
+
+`Monitor` همان چیزی است که `lock` در پشت صحنه از آن استفاده می‌کند:
+
+```csharp
+Monitor.Enter(_lockObject);
+try {
+    // critical section
+} finally {
+    Monitor.Exit(_lockObject);
+}
+```
+
+**تفاوت**: `Monitor` قابلیت‌های بیشتری دارد مثل `Monitor.Wait()` و `Monitor.Pulse()`.
+
+### Mutex
+
+**Mutex** برای synchronization بین **Processها** استفاده می‌شود (نه فقط Threadها):
+
+```csharp
+using var mutex = new Mutex(false, "MyAppMutex");
+if (mutex.WaitOne(1000)) {
+    try {
+        // critical section
+    } finally {
+        mutex.ReleaseMutex();
+    }
+}
+```
+
+**تفاوت Monitor vs Mutex**:
+- **Monitor**: فقط در یک Process (internal threads)
+- **Mutex**: بین Processها (external/OS-wide)
+
+**استفاده**: وقتی می‌خواهید مطمئن شوید فقط یک instance از برنامه در حال اجرا است.
+
+### Semaphore و SemaphoreSlim
+
+**Semaphore** اجازه می‌دهد **چند Thread** همزمان به یک resource دسترسی داشته باشند:
+
+```csharp
+// SemaphoreSlim برای internal threads (سریع‌تر)
+private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(3, 3); // حداکثر 3 Thread
+
+async Task DoWork() {
+    await _semaphore.WaitAsync();
+    try {
+        // حداکثر 3 Thread می‌توانند اینجا باشند
+    } finally {
+        _semaphore.Release();
+    }
+}
+
+// Semaphore برای external threads (بین Processها)
+using var semaphore = new Semaphore(3, 3, "MySemaphore");
+```
+
+**استفاده**: وقتی می‌خواهید تعداد محدودی Thread به یک resource دسترسی داشته باشند (مثلاً connection pool).
+
+### Concurrent Collections
+
+وقتی چند thread همزمان به یک **collection** (مثل Dictionary یا List) خواندن/نوشتن می‌کنند، lock دستی یکی از گزینه‌هاست؛ گزینهٔ دیگر استفاده از **concurrent collections** است:
+
+- `ConcurrentDictionary<TKey, TValue>` — برای cache و نگاشت‌های مشترک
+- `ConcurrentBag<T>`, `ConcurrentQueue<T>`, `ConcurrentStack<T>` — برای producer-consumer و صف کار
+
+**Trade-off**: این نوع مجموعه‌ها lockهای ریزدانه (fine-grained) داخلی دارند؛ برای سناریوهای read-heavy یا رقابت متوسط مناسب‌اند. اگر critical section خیلی کوچک است، گاهی یک lock ساده روی `Dictionary` ساده‌تر و قابل‌دفاع‌تر است. در مصاحبه انتظار می‌رود نام آن‌ها و زمان استفاده را بدانید.
+
+---
+
+## 9. Deadlock
+
+**Deadlock** زمانی رخ می‌دهد که دو یا چند Thread منتظر یکدیگر هستند:
+
+```
+Thread 1: Lock A → منتظر Lock B
+Thread 2: Lock B → منتظر Lock A
+```
+
+**راه‌حل‌ها**:
+1. **همیشه locks را به یک ترتیب بگیرید** (lock ordering)
+2. از `Monitor.TryEnter` با timeout استفاده کنید
+3. از `SemaphoreSlim.WaitAsync` استفاده کنید (async-friendly)
+
+**مثال Deadlock**:
+```csharp
+// ❌ Deadlock risk
+void Method1() {
+    lock (lockA) {
+        lock (lockB) { ... }
+    }
+}
+
+void Method2() {
+    lock (lockB) {
+        lock (lockA) { ... } // Deadlock!
+    }
+}
+```
+
+**راه حل**:
+```csharp
+// ✅ همیشه به یک ترتیب
+void Method1() {
+    lock (lockA) {
+        lock (lockB) { ... }
+    }
+}
+
+void Method2() {
+    lock (lockA) { // همان ترتیب
+        lock (lockB) { ... }
+    }
+}
+```
+
+---
+
+## 10. Thread Pool
+
+### مشکل Thread Overhead
+
+ایجاد و حذف Thread هزینه دارد:
+- Allocate کردن Stack (معمولاً 1MB)
+- ایجاد metadata
+- Context switching
+
+**راه حل**: **Thread Pool** - یک استخر از Threadها که از قبل ایجاد شده‌اند و reuse می‌شوند.
+
+### Thread Pool در .NET
+
+- Thread Pool به صورت خودکار توسط CLR مدیریت می‌شود
+- تعداد Threadها **dynamic** است (نه ثابت!)
+- Threadهای Thread Pool **background threads** هستند
+
+**نکته مهم**: Thread Pool size ثابت نیست. CLR بر اساس workload آن را تنظیم می‌کند (معمولاً از تعداد CPU cores شروع می‌کند).
+
+### Foreground vs Background Threads
+
+- **Foreground Thread**: Process تا زمانی که foreground threadها در حال اجرا هستند، زنده می‌ماند
+- **Background Thread**: وقتی همه foreground threadها تمام شدند، background threadها terminate می‌شوند
+
+**نکته**: Thread Pool threads همیشه background هستند. در سرویس‌های وب، اگر threadهای این pool را با کار blocking یا CPU سنگین اشغال کنید، **thread pool starvation** رخ می‌دهد و درخواست‌های جدید در صف می‌مانند؛ در production با متریک‌های مربوط به thread count و queue length قابل مشاهده است.
+
+---
+
+## 11. Task و Task-Based Asynchronous Pattern (TAP)
+
+### Task چیست؟
+
+**Task** یک abstraction سطح بالا برای asynchronous work است. Task یک Thread نیست، بلکه یک **promise** برای یک کار است که ممکن است در آینده کامل شود.
+
+**تفاوت Task vs Thread**:
+- **Thread**: سطح پایین، مستقیم با OS
+- **Task**: سطح بالا، از Thread Pool استفاده می‌کند
+
+### Task و Thread Pool
+
+Taskها معمولاً روی Thread Pool اجرا می‌شوند:
+
+```csharp
+Task.Run(() => {
+    // این کار روی Thread Pool اجرا می‌شود
+});
+```
+
+**مزایا**:
+- Overhead کمتری نسبت به Thread دارد
+- می‌تواند cancelled شود
+- می‌تواند result return کند
+- می‌تواند exception handle کند
+
+### Long-Running Tasks
+
+اگر یک Task **long-running** است، باید به CLR بگویید که Thread جداگانه ایجاد کند:
+
+```csharp
+Task.Factory.StartNew(() => {
+    // Long-running work
+}, TaskCreationOptions.LongRunning);
+```
+
+**چرا مهم است؟** اگر یک Task long-running روی Thread Pool اجرا شود، یک Thread Pool thread را برای مدت طولانی اشغال می‌کند و ممکن است Thread Pool را exhaust کند.
+
+---
+
+## 12. Async/Await
+
+### چرا Async/Await؟
+
+**Async/await** برای **I/O-bound** کارها طراحی شده است، نه CPU-bound.
+
+**مثال I/O-bound**:
+```csharp
+// ❌ Synchronous - Thread block می‌شود
+var data = File.ReadAllText("file.txt");
+
+// ✅ Asynchronous - Thread آزاد می‌شود
+var data = await File.ReadAllTextAsync("file.txt");
+```
+
+### چگونه کار می‌کند؟
+
+1. وقتی `await` می‌رسد، Thread به Thread Pool برمی‌گردد
+2. وقتی I/O operation کامل شد، یک callback اجرا می‌شود
+3. ادامه کار روی یک Thread Pool thread اجرا می‌شود
+
+**State Machine**: Compiler متد `async` را به یک state machine تبدیل می‌کند که state را track می‌کند.
+
+### ConfigureAwait
+
+```csharp
+await SomeMethodAsync().ConfigureAwait(false);
+```
+
+**چرا مهم است؟**
+- `ConfigureAwait(false)`: ادامه کار روی هر Thread Pool thread می‌تواند اجرا شود
+- `ConfigureAwait(true)` (default): ادامه کار روی **SynchronizationContext** اصلی (مثلاً UI thread)
+
+**قانون**: در library code، همیشه از `ConfigureAwait(false)` استفاده کنید (مگر اینکه نیاز به SynchronizationContext داشته باشید).
+
+**نکتهٔ ASP.NET Core**: در ASP.NET Core به‌طور پیش‌فرض **SynchronizationContext** وجود ندارد؛ یعنی ادامهٔ بعد از `await` روی هر thread pool thread اجرا می‌شود و `ConfigureAwait(false)` در این محیط عملاً تغییری در رفتار ایجاد نمی‌کند. با این حال استفاده از آن در library code توصیه می‌شود تا اگر همان کد در WinForms/WPF یا جاهای دیگر استفاده شد، از deadlock و وابستگی به context جلوگیری شود.
+
+---
+
+## 13. Cancellation Token
+
+**CancellationToken** برای cancel کردن async operations استفاده می‌شود:
+
+```csharp
+var cts = new CancellationTokenSource();
+var token = cts.Token;
+
+// در متد async
+async Task DoWorkAsync(CancellationToken cancellationToken) {
+    while (!cancellationToken.IsCancellationRequested) {
+        // کار
+        await Task.Delay(1000, cancellationToken);
+    }
+}
+
+// Cancel کردن
+cts.Cancel();
+```
+
+**نکات مهم**:
+- Cancellation Token **cooperative** است - باید در کد چک شود
+- `OperationCanceledException` را handle کنید
+- در long-running operations حتماً از cancellation token استفاده کنید
+
+**استفاده در Production**: در Web APIs، وقتی client connection را قطع می‌کند، باید background tasks را cancel کنید تا resources هدر نروند.
+
+---
+
+## 14. Synchronous vs Asynchronous
+
+### Synchronous (Blocking)
+
+```csharp
+void DoWork() {
+    var data = File.ReadAllText("file.txt"); // Thread block می‌شود
+    Process(data);
+}
+```
+
+- Thread منتظر می‌ماند تا I/O کامل شود
+- Thread نمی‌تواند کار دیگری انجام دهد
+- **مشکل**: در Web apps، Thread Pool را exhaust می‌کند
+
+### Asynchronous (Non-Blocking)
+
+```csharp
+async Task DoWorkAsync() {
+    var data = await File.ReadAllTextAsync("file.txt"); // Thread آزاد می‌شود
+    Process(data);
+}
+```
+
+- Thread به Thread Pool برمی‌گردد
+- وقتی I/O کامل شد، ادامه کار اجرا می‌شود
+- **مزیت**: Thread Pool threads بهتر استفاده می‌شوند
+
+**قانون طلایی**: در async code، **هرگز** `.Result` یا `.Wait()` استفاده نکنید (deadlock risk).
+
+---
+
+## 15. Key Interview Talking Points
+
+### باید بتوانید توضیح دهید:
+
+1. **تفاوت Process و Thread**: Process حافظه جداگانه دارد، Threadها حافظه مشترک دارند
+2. **چرا Thread Pool**: کاهش overhead ایجاد/حذف Thread
+3. **چرا async/await**: برای I/O-bound کارها، Thread را block نمی‌کند
+4. **تفاوت lock, Monitor, Mutex, Semaphore**: 
+   - lock/Monitor: internal threads
+   - Mutex: external threads (بین Processها)
+   - Semaphore: چند Thread همزمان
+5. **Interlocked vs lock**: برای عملیات تک‌گام (مثل counter) Interlocked؛ برای critical section پیچیده lock.
+6. **Concurrent collections**: چه زمانی `ConcurrentDictionary` / `ConcurrentQueue` به‌جای lock دستی — وقتی چند thread به یک collection مشترک دسترسی دارند.
+7. **Deadlock prevention**: lock ordering، timeout
+8. **ConfigureAwait(false)**: در library code؛ و در ASP.NET Core که SynchronizationContext نداریم عملاً اثرش در همان محیط صفر است.
+9. **Cancellation Token**: برای cancel کردن async operations و آزاد کردن resource وقتی client قطع می‌کند.
+10. **Task.Run در ASP.NET Core برای CPU-bound**: چرا معمولاً anti-pattern است (همان thread pool درخواست‌ها).
+
+---
+
+## 16. Common Mistakes & Red Flags
+
+### ❌ اشتباهات رایج:
+
+1. **استفاده از `.Result` یا `.Wait()` در async code**
+   ```csharp
+   // ❌ Deadlock risk
+   var result = SomeAsync().Result;
+   ```
+
+2. **Lock کردن روی `this` یا `typeof(MyClass)`**
+   ```csharp
+   // ❌ بد
+   lock (this) { ... }
+   ```
+
+3. **استفاده از async/await برای CPU-bound کارها بدون offload** — async/await به‌خودی‌خود کار را سبک نمی‌کند. برای CPU-bound یا باید از `Task.Run` استفاده کنید (و آن هم در **ASP.NET Core** اغلب anti-pattern است چون همان thread pool درخواست‌ها را exhaust می‌کند) یا کار را به backend/worker جدا بسپارید.
+   ```csharp
+   // ❌ در وب: Task.Run فقط همان thread pool را مشغول می‌کند
+   async Task<int> CalculateAsync() {
+       return await Task.Run(() => HeavyComputation());
+   }
+   ```
+
+4. **فراموش کردن `ConfigureAwait(false)` در library code**
+
+5. **استفاده از `async void`** — فقط برای event handlers (مثلاً دکمه در UI). در `async void` exceptionها را نمی‌توانید catch کنید و در صورت بروز خطا می‌تواند process را به پایین بیندازد یا خطا گم شود؛ در کد غیر از event handler همیشه `async Task` استفاده کنید.
+
+6. **عدم استفاده از Cancellation Token در long-running operations**
+
+7. **Race condition در shared state** — برای یک counter یا عملیات ساده، استفاده از lock به‌جای **Interlocked** هم اشتباه فنی نیست ولی در مصاحبه و در کد واقعی نشان می‌دهد گزینهٔ سبک‌تر را نمی‌شناسید.
+
+8. **Thread pool starvation** — در سرویس‌های وب، block کردن thread pool (مثلاً با `.Result` یا `.Wait()` یا کار CPU سنگین روی همان pool) می‌تواند باعث شود درخواست‌های جدید نتوانند thread بگیرند و سرویس به‌ظاهر «گیر کند»؛ در production با monitoring و دیدن queue length و thread count قابل تشخیص است.
+
+---
+
+## 17. When to Use / When NOT to Use
+
+### Thread
+- ✅ **استفاده**: وقتی نیاز به کنترل دقیق Thread دارید (مثلاً priority)
+- ❌ **عدم استفاده**: در اکثر موارد - از Task استفاده کنید
+
+### Task
+- ✅ **استفاده**: برای async work، parallel processing
+- ❌ **عدم استفاده**: برای long-running work (از `TaskCreationOptions.LongRunning` استفاده کنید)
+
+### async/await
+- ✅ **استفاده**: I/O-bound operations (file, network, database)
+- ❌ **عدم استفاده**: CPU-bound operations (از `Task.Run` استفاده کنید)
+
+### lock/Monitor
+- ✅ **استفاده**: synchronization در یک Process
+- ❌ **عدم استفاده**: وقتی نیاز به coordination بین Processها دارید (از Mutex استفاده کنید)
+
+### Semaphore
+- ✅ **استفاده**: وقتی می‌خواهید تعداد محدودی Thread به resource دسترسی داشته باشند
+- ❌ **عدم استفاده**: وقتی فقط یک Thread باید دسترسی داشته باشد (از lock استفاده کنید)
+
+### Interlocked
+- ✅ **استفاده**: عملیات atomic ساده (increment، compare-exchange) روی یک متغیر؛ بدون نیاز به lock.
+- ❌ **عدم استفاده**: وقتی منطق critical section چند خط یا چند متغیر است (از lock استفاده کنید).
+
+### Concurrent collections
+- ✅ **استفاده**: چند thread به یک dictionary/queue/stack مشترک؛ وقتی lock دستی روی هر عملیات سنگین یا پرتکرار می‌شود.
+- ❌ **عدم استفاده**: وقتی فقط یک thread می‌نویسد یا رقابت خیلی کم است؛ گاهی یک lock ساده ساده‌تر است.
+
+---
+
+## خلاصه
+
+Concurrency و Multi-threading موضوع پیچیده‌ای است که نیاز به درک عمیق دارد. در مصاحبه:
+
+1. **مفاهیم پایه** را بدانید (Process, Thread, Stack, Heap)
+2. **Synchronization primitives** را بشناسید و trade-off‌ها را بدانید
+3. **async/await** را درست استفاده کنید
+4. **Deadlock** را تشخیص دهید و از آن جلوگیری کنید
+5. **Real-world scenarios** را درک کنید
+
+**نکته نهایی**: در مصاحبه‌های Senior-level، فقط syntax کافی نیست. باید بتوانید **چرا** و **چه زمانی** از هر ابزار استفاده کنید و **trade-off‌ها** را توضیح دهید.

@@ -1,550 +1,215 @@
-[gitmag-group-admin/SQL-Advanced: md file of sql advanced course in gitmag youtube chennel (github.com)](https://github.com/gitmag-group-admin/SQL-Advanced?tab=readme-ov-file)
+# SQL پیشرفته: تراکنش، ACID، کوئری و دستورات
 
-[آموزش پیشرفته SQL - sub queries (youtube.com)](https://www.youtube.com/watch?v=mmijvRWozqw&list=PL1xdRbCBrpoel9XleokPKxF0mRzc3YLB2&index=15)
+## 1. Interview Relevance Summary
 
-[(60) جلسه 1: Course Overview - (DB) - YouTube](https://www.youtube.com/watch?v=ix5nDOfT1Kk&list=PLKwsMoYJqrLIUfclTe45Q_WFfyelJQbs4)
-transaction
-: مجموعه ای از task ها است.
-مفهومی در بیزنس بوده که در پایگاه داده نیز قالب شده.
-در دل دیتابیس transaction management هستند.
-transaction life cycle :
-برای مثال زمانی که در یک متد هستیم. در جایی از بلاک Trans.Begin() بگین میشود. در ادامه مجموعه کار هایی از  Begin انجام میشوند - میتواند حذف اپدیت گرفتن دیتا یا هرچیزی باشد - در این لحظه در دیتابیس اتفاقی ایجاد نمیشود. در صورتی نیز که یک عملیات درست انجام نشود عملیات های دیگر اعمال نمیشود.
-در اصطلاح Transaction انجام نمیشود. 
-حالا فرض میکنیم عملیات ها خطایی ندارند پس باید دیتابیس تمام کار های مد نظر را انجام دهد. در اینجا به اصطلاح ما Transaction.Commit() میکنیم.
-و عملیات روی دیتابیس در صورت درست بودن تمام عملیات اعمال میشود.
-اگر موفق نبود در catch باید 
-transaction.RollBack() اتفاق میوفتد همان برگرداندن تمام تغییرات اتفاق میوفتد.
+این فایل **مفاهیم تراکنش و ACID**، **Full Join و Union**، **ALTER و Truncate**، **HAVING در برابر WHERE** و **Subquery** رو پوشش می‌ده. برای مصاحبهٔ Backend مهمه تراکنش و ACID رو بدونیش و بتونی تفاوت WHERE و HAVING، Truncate و Delete، و کاربرد Union و Subquery رو بگی. برای JOINهای پایه به **[[SQL]]** و برای طراحی دیتابیس به **[[Database]]** مراجعه کن.
+
+---
+
+## 2. تراکنش (Transaction) و ACID
+
+**Transaction** یعنی مجموعه‌ای از کارها که با هم یه **واحد منطقی** رو تشکیل می‌دن: یا **همه** انجام می‌شن یا **هیچ‌کدوم**. این مفهوم از بیزنس وارد دیتابیس شده و با **Begin / Commit / Rollback** مدیریت می‌شه.
+
+- **Begin**: شروع تراکنش؛ بعد از آن تا Commit هیچ‌چیز روی دیتابیس قطعی نمی‌شه.
+- **Commit**: تأیید همهٔ تغییرات؛ از این لحظه تغییرات روی دیتابیس اعمال می‌شن.
+- **Rollback**: در صورت خطا همهٔ تغییرات همان تراکنش برگردونده می‌شن.
+
+تراکنش در **لایهٔ بیزنس** (مثلاً کد C#) شروع و تمام می‌شه و روی **دیتابیس** اجرا می‌شه. برای اطمینان از درست بودن تراکنش‌ها اصول **ACID** تعریف شده:
+
 ![[Pasted image 20240201025230.png]]
 
-Transaction در لایه بیزنس نوشته میشود و در دیتابیس انجام میشود.
+- **Atomicity (اتمیک بودن)**: کل تراکنش تجزیه‌ناپذیر است؛ یا همهٔ عملیات انجام می‌شن یا هیچ‌کدوم. همه یا هیچ.
+- **Consistency (پایداری)**: قبل و بعد از تراکنش دیتابیس در حالت **پایدار** و معتبر است؛ قوانین جامعیت داده نقض نمی‌شن.
+- **Isolation (انزوا)**: تراکنش‌ها طوری اجرا می‌شن که روی هم اثر نامرئی بذارن؛ در عمل با قفل یا سطح ایزوله، تراکنش دوم ممکنه صبر کنه یا دیتای قدیمی بخونه (بسته به سطح ایزوله).
+- **Durability (ماندگاری)**: بعد از **Commit** داده از بین نمی‌ره؛ با مکانیزم **Recovery** در صورت خرابی قابل بازیافت است.
 
-برای منیج کردن و مطمئن شدن از روند Transaction ها اصولی طراحی شد به نام ACID.
-ASID :
-ATOMICITY : اصل غیر قابل تجذیه بودن
-به معنی اینکه کل ترزشکن تجزیه ناپذیر است یا تمام عملیات انجام میشوند یا انجام نمیشوند. همه یا هیچ - دارای یکپارچه گی
+**نکته**: خیلی از **NoSQL**ها تراکنش به‌معنای کامل ACID ندارن؛ فقط بعضی (مثل بعضی حالت‌های MongoDB) پشتیبانی محدود دارن.
 
-Consistency : اصل پایداری
-قبل از انجام transaction  یک پایگاه داده یا dbms در حالت پایدار است. و بعد از انجام transaction باید دوباره به حالت پایدار برگردد.  قوانین** جامعیت داده نباید نقض شود.
+---
 
-Isolation : اصل انزوا
-زمانی که یک transaction با جداول خاصی کار میکنند نباید transaction دومی باشد که با همان جداول کار کند. پس باید صبر کند تا تراکنش قبلی تمام شود و بعدی انجام شود.
-و در عمل هم این اتفاق نمی افتد و عملیات مشابه منجر به خطا میشود.
-البته خارج از transaction عملیات read میتواند صورت بگیرد که احتمال دریافت دیتای قدیمی وجود دارد.
+## 3. جامعیت داده (Data Integrity)
 
-Durability :  هر سیستمی که transaction داشته باشد باید تضمین کند که بعد از commit داده ها از بین نمیروند.
-که اگر دیتا از بین برود باید مکانیسم recovery management
+در طول عمر داده، DBMS باید **نگهداری و امنیت**، **پایداری**، **صحت** و **ضمانت** داده رو تأمین کنه. دو نوع جامعیت داریم:
 
-تراکنش = بار
+- **فیزیکی**: سخت‌افزار و ذخیره‌سازی (بکاپ، recovery).
+- **منطقی**: قوانین در **اپلیکیشن** و در **خود DBMS** — مثل **Data Type**، **Constraints**، **Primary Key** (Unique و Not Null)، **Foreign Key**. جامعیت منطقی با تراکنش و ACID نباید به‌هم بریزه.
 
-NOSQL ها تراکنش ساپورت نمیکنند. فقط یکی از آن ها ساپورت میکند.
-
-Data integrity :
-در طول عمر یک داده
-هر dbms باید این هارا ضمانت کند.
-
-Maintenance نگهداشت و امنیت داده
-Consistency پایداری داده ها
-Accuracy صحت داده ها
-Assurance ضمانت داده ها
-
-دو نوع جامعیت داریم :
-- فیزیکی : سخت افزار باید ضمانت نگهدای و امنیت را به ما بدهد.
-- منطقی : 
-	- یک بخش مربوط به اپلیکیشن هست
-		- یک بخش مربوط به قوانین dbms هست. مانند :
-			- data type
-			- Constraints
-			- P.K -> Unique and not null
-			- F.K
 ![[Pasted image 20240201045409.png]]
 
-جامعیت داده با تراکنش نباید بهم بریزد. اصول acid
+---
 
+## 4. Full Join
 
-
-Full join
-تمام رکورد های دو جدول با هم به اشتراک گذاشته میشوند. درصورتی که معادلی برای فیلد هایی نباشد طبق شرط مورد نظر دیتا مقدار null میگیرد.
+**Full (Outer) Join**: همهٔ رکوردهای **هر دو** جدول در خروجی هستن؛ اگه مطابقی برای یه رکورد نباشه، ستون‌های طرف مقابل **NULL** می‌شن.
 
 ```sql
-SQL> SELECT  ID, NAME, AMOUNT, DATE
-   FROM CUSTOMERS
-   FULL JOIN ORDERS
-   ON CUSTOMERS.ID = ORDERS.CUSTOMER_ID;
+SELECT ID, NAME, AMOUNT, DATE
+FROM CUSTOMERS
+FULL JOIN ORDERS
+ON CUSTOMERS.ID = ORDERS.CUSTOMER_ID;
 ```
 
 ![[Pasted image 20240202190725.png]]
 
-این دستور در mysql وجود ندارد و معادل آن union هست در mysql
+**نکته**: در **MySQL** FULL JOIN وجود نداره؛ می‌تونی با ترکیب **LEFT و RIGHT و UNION** معادلش رو بسازی.
 
-Union clause :
-برای ترکیب کردن و اجتمال سلک ها و کوئری های مختلف میگیریم از union استفاده میکنیم.
-شرایط : باید از هر دو جدول به تعداد مساوی رکورد گرفته شود.
-این شرایط برای نوع دیتا هم صدق میکنند.
-نکته : در این روش دیتای تکراری حذف میشوند.
+---
+
+## 5. Union و Union All
+
+**UNION** برای **ترکیب نتیجهٔ دو (یا چند) SELECT** به‌صورت یک مجموعهٔ یک‌جا است. شرط: تعداد و **نوع** ستون‌های هر دو SELECT یکی باشه. با **UNION** رکوردهای **تکراری** حذف می‌شن؛ با **UNION ALL** تکراری هم می‌مونن (و معمولاً سریع‌تره چون حذف تکراری انجام نمی‌شه).
 
 ```sql
-SELECT column1 [, column2 ]
-FROM table1 [, table2 ]
-[WHERE condition]
-
+SELECT column1 [, column2 ] FROM table1 [WHERE condition]
 UNION
-
-SELECT column1 [, column2 ]
-FROM table1 [, table2 ]
-[WHERE condition]
+SELECT column1 [, column2 ] FROM table2 [WHERE condition];
 ```
 
 ![[Pasted image 20240202191419.png]]
-
-نتیجه:
 ![[Pasted image 20240202191438.png]]
 
-Union All :
-امکان اینکه دیتای تکراری هم داشته باشیم به ما میدهد.
+---
 
+## 6. Alias
 
-Alias :
-زمانی که ستون هایی با نام مشابه داریم به کمک Alias میتوانیم بین دو اسم تمایز قائل شویم.
-این اسامی به صورت موقت هست و بعد از بسته شدن در دسترس نیستند.
-برای  نام جداول هم میتوانیم استفاده کنیم.
-``` sql
-SELECT column1, column2....
-FROM table_name AS alias_name
-WHERE [condition];
-```
+برای **تفاوت گذاشتن** بین ستون‌ها یا جدول‌هایی که نام یکسان دارن از **Alias** استفاده می‌کنی. این نام‌ها **موقت** هستن و فقط در همون کوئری معتبرن.
 
 ```sql
-SELECT column_name AS alias_name
-FROM table_name
-WHERE [condition];
+SELECT column_name AS alias_name FROM table_name WHERE condition;
+
+SELECT t1.col1, t2.col2
+FROM table1 AS t1, table2 AS t2
+WHERE t1.id = t2.id;
 ```
 
-Alter :
-در شرایطی که در امکان تغییرات روی جداول را بخواهیم از این مورد استفاده میکنیم.
-مثلا ستونی حذف شود اضافه شود تایپ آن تغییر کند و...
-از alter استفاده میکنیم.
+---
 
-## Syntax
+## 7. ALTER TABLE
 
-The basic syntax of an ALTER TABLE command to add a **New Column** in an existing table is as follows.
+وقتی می‌خوای **ساختار جدول** رو عوض کنی (اضافه/حذف ستون، تغییر نوع، اضافه/حذف Constraint) از **ALTER TABLE** استفاده می‌کنی. سینتکس دقیق بین **SQL Server** و **MySQL** فرق داره؛ نمونه‌های متداول:
 
-```
+**اضافه کردن ستون:**
+```sql
 ALTER TABLE table_name ADD column_name datatype;
 ```
 
-The basic syntax of an ALTER TABLE command to **DROP COLUMN** in an existing table is as follows.
-
-```
+**حذف ستون:**
+```sql
 ALTER TABLE table_name DROP COLUMN column_name;
 ```
 
-The basic syntax of an ALTER TABLE command to change the **DATA TYPE** of a column in a table is as follows.
+**تغییر نوع ستون:** در SQL Server معمولاً `ALTER COLUMN`؛ در MySQL `MODIFY COLUMN`.
 
-```
-ALTER TABLE table_name MODIFY COLUMN column_name datatype;
-```
-
-The basic syntax of an ALTER TABLE command to add a **NOT NULL** constraint to a column in a table is as follows.
-
-```
-ALTER TABLE table_name MODIFY column_name datatype NOT NULL;
-```
-
-The basic syntax of ALTER TABLE to **ADD UNIQUE CONSTRAINT** to a table is as follows.
-
-```
-ALTER TABLE table_name 
-ADD CONSTRAINT MyUniqueConstraint UNIQUE(column1, column2...);
-```
-
-The basic syntax of an ALTER TABLE command to **ADD CHECK CONSTRAINT** to a table is as follows.
-
-```
-ALTER TABLE table_name 
-ADD CONSTRAINT MyUniqueConstraint CHECK (CONDITION);
-```
-
-The basic syntax of an ALTER TABLE command to **ADD PRIMARY KEY** constraint to a table is as follows.
-
-```
-ALTER TABLE table_name 
-ADD CONSTRAINT MyPrimaryKey PRIMARY KEY (column1, column2...);
-```
-
-The basic syntax of an ALTER TABLE command to **DROP CONSTRAINT** from a table is as follows.
-
-```
-ALTER TABLE table_name 
-DROP CONSTRAINT MyUniqueConstraint;
-```
-
-If you're using MySQL, the code is as follows.
-
-```
-ALTER TABLE table_name 
-DROP INDEX MyUniqueConstraint;
-```
-
-The basic syntax of an ALTER TABLE command to **DROP PRIMARY KEY** constraint from a table is as follows.
-
-```
-ALTER TABLE table_name 
-DROP CONSTRAINT MyPrimaryKey;
-```
-
-If you're using MySQL, the code is as follows.
-
-```
-ALTER TABLE table_name 
-DROP PRIMARY KEY;
-```
-
-
-
-Truncate :
-زمانی که لازم هست دیتای داخل یک جدول به صورت کلی پاک شود تا تغییراتی درون آن اتفاق بیوفتد. از این دستور استفاده میکنیم.
-غیر معقولانه ترین حالت استفاده از drop table یا delete table هست.
-میتوانیم برای دستور delete شرط بزاریم و بگیم کدوم ستون را پاک کند.
-اما truncate شرط پذیر نیست و همه رکورد هارا پاک میکند.
-زمانی که از delete استفاده میکنیم فضایی که جدول و رکورد های ان اشغال کرده بعد از حذف شدن آزاد نمیشود. اما truncate فضای قبل را آزاد میکند و مجددا قابل استفاده است.
-Truncate به مراتب سریع تر از delete هست.
-در کل زمانی که میخواهیم ساختار یک جدول رو تغییر بدیم اما تمام رکورد هارا به علاوه فصایی که اشغال کردن رو پاک کنیم از truncate استفاده میکنیم.
-
-Having :
-زمانی که یک شرط و در کوئری بخواهیم بیاریم از having استفاده میکنیم.
-تفاوت آن با where این هست که دستور where جایی اعمال میشود که مقداری در جداول select شده هستند و شرایط خاصی برای واکشی داریم.
-اما having زمانی استفاده میشود که میخواهیم دیتا های مد نظرمون رو گروه بندی کنیم و شرایطی روی گروهی از اطاعات قرار دهیم.
-where روی تمام داده اعمال میشود. اما having بعد از گروه بندی یا عبارت Group By صدا زده میشود.
-
+**اضافه کردن Constraint (UNIQUE, CHECK, PRIMARY KEY):**
 ```sql
-SELECT
-FROM
-WHERE
-GROUP BY
-HAVING
-ORDER BY
+ALTER TABLE table_name ADD CONSTRAINT constraint_name UNIQUE(column1, column2);
+ALTER TABLE table_name ADD CONSTRAINT constraint_name CHECK (condition);
+ALTER TABLE table_name ADD CONSTRAINT pk_name PRIMARY KEY (column1, column2);
 ```
+
+**حذف Constraint:** در SQL Server `DROP CONSTRAINT name`؛ در MySQL برای ایندکس/unique گاهی `DROP INDEX name` یا `DROP PRIMARY KEY`. مستندات موتور خودت رو چک کن.
+
+---
+
+## 8. Truncate در برابر Delete
+
+- **DELETE**: رکوردها رو با **شرط** (یا بدون شرط) حذف می‌کنه؛ **Trigger** و **Log** اجرا می‌شن؛ فضای آزاد شده لزوماً فوراً به جدول برنمی‌گرده (بسته به موتور).
+- **TRUNCATE**: **همهٔ** رکوردهای جدول رو یکجا حذف می‌کنه؛ **شرط نمی‌گیره**؛ معمولاً **سریع‌تر** از Delete است و فضای جدول آزاد می‌شه. برای خالی کردن کامل جدول و شروع مجدد مناسب است.
+
+**نکته**: حذف کل جدول با **DROP TABLE** ساختار رو هم از بین می‌بره؛ وقتی فقط می‌خوای داده و فضای جدول رو خالی کنی و ساختار بمونه از **TRUNCATE** استفاده کن (با توجه به محدودیت‌های FK و موتور).
+
+---
+
+## 9. HAVING در برابر WHERE
+
+- **WHERE**: روی **هر رکورد** قبل از گروه‌بندی اعمال می‌شه؛ یعنی فیلتر روی دادهٔ خام.
+- **HAVING**: بعد از **GROUP BY** اعمال می‌شه؛ یعنی شرط روی **گروه‌ها** (یا روی توابع تجمعی مثل COUNT, SUM).
+
+ترتیب منطقی: `FROM` → `WHERE` → `GROUP BY` → `HAVING` → `SELECT` → `ORDER BY`.
 
 ```sql
 SELECT column1, column2
 FROM table1, table2
-WHERE [ conditions ]
+WHERE conditions
 GROUP BY column1, column2
-HAVING [ conditions ]
-ORDER BY column1, column2
+HAVING conditions
+ORDER BY column1, column2;
 ```
 
 ![[Pasted image 20240202202716.png]]
 
-Transactions :
-زمانی که میخواهیم مجموعه از دستورات مربط را بخواهیم اجرا کنیم تا به یک عملیات واحد برسیم.
-Transaction control
-commit -> To save the changes
-RollBack -> To roll back the changes
-SavePoint -> Creates points within the groups of transactions in wich RollBack
+---
 
-SetTransaction -> Places a name on transaction
+## 10. Subquery (زیرپرسش)
 
-
-## Properties of Transactions
-
-Transactions have the following four standard properties, usually referred to by the acronym **ACID**.
-
-- **Atomicity** − ensures that all operations within the work unit are completed successfully. Otherwise, the transaction is aborted at the point of failure and all the previous operations are rolled back to their former state.
-    
-- **Consistency** − ensures that the database properly changes states upon a successfully committed transaction.
-    
-- **Isolation** − enables transactions to operate independently of and transparent to each other.
-    
-- **Durability** − ensures that the result or effect of a committed transaction persists in case of a system failure.
-سینتکس ها :
-
-
-
-
-
-
-
-Sub queries :
-زمانی که دو جدول داریم و میخواهیم روی جدول اول عملیاتی انجام دهیم که تحت تاثیر جدول دوم هست.
-مثلا از دیتابیس بک اپی گرفتیم و حالا دیتابیس پاک شده حالا اطلاعات جدول دیتابیس پاک شده میتوان با استفاده از بک آپ باز گردانی کنیم.
+وقتی نتیجهٔ **یک SELECT** داخل SELECT، WHERE یا دستور دیگه (مثلاً INSERT/UPDATE/DELETE) استفاده می‌شه، به آن **Subquery** می‌گیم. مثال: واکشی از جدولی که تحت تأثیر شرطی از جدول دیگر است (مثلاً بازگردوندن از بکاپ بر اساس لیست ID).
 
 ```sql
-SELECT column_name [, column_name ]
-FROM   table1 [, table2 ]
-WHERE  column_name OPERATOR
-   (SELECT column_name [, column_name ]
-   FROM table1 [, table2 ]
-   [WHERE])
+SELECT column_name
+FROM table1
+WHERE column_name OPERATOR
+   (SELECT column_name FROM table2 WHERE condition);
 ```
-
 
 ![[Pasted image 20240203234105.png]]
 
-
-insert 
-```
+**INSERT با Subquery:**
+```sql
 INSERT INTO CUSTOMERS_BKP
-   SELECT * FROM CUSTOMERS 
-   WHERE ID IN (SELECT ID 
-   FROM CUSTOMERS) ;
+SELECT * FROM CUSTOMERS WHERE ID IN (SELECT ID FROM CUSTOMERS);
 ```
 
-UPDATE :
-```
+**UPDATE با Subquery:**
+```sql
 UPDATE CUSTOMERS
-   SET SALARY = SALARY *  0.25 WHERE AGE IN (SELECT AGE FROM CUSTOMERS_BKP
-      WHERE AGE >=  27  );
+SET SALARY = SALARY * 0.25
+WHERE AGE IN (SELECT AGE FROM CUSTOMERS_BKP WHERE AGE >= 27);
 ```
 
-DELETE :
-```
+**DELETE با Subquery:**
+```sql
 DELETE FROM CUSTOMERS
-   WHERE AGE IN (SELECT AGE FROM CUSTOMERS_BKP
-      WHERE AGE >=  27  );
+WHERE AGE IN (SELECT AGE FROM CUSTOMERS_BKP WHERE AGE >= 27);
 ```
 
+---
 
-Full join
-تمام رکورد های دو جدول با هم به اشتراک گذاشته میشوند. درصورتی که معادلی برای فیلد هایی نباشد طبق شرط مورد نظر دیتا مقدار null میگیرد.
+## 11. کنترل تراکنش در SQL (خلاصه)
 
-```sql
-SQL> SELECT  ID, NAME, AMOUNT, DATE
-   FROM CUSTOMERS
-   FULL JOIN ORDERS
-   ON CUSTOMERS.ID = ORDERS.CUSTOMER_ID;
-```
+- **COMMIT**: ذخیرهٔ تغییرات.
+- **ROLLBACK**: برگردوندن تغییرات تراکنش جاری.
+- **SAVEPOINT**: نقطهٔ ذخیره داخل تراکنش که بعداً بتوانی تا همان نقطه Rollback کنی.
+- **SET TRANSACTION**: نام‌گذاری یا تنظیمات تراکنش (سینتکس بسته به موتور فرق می‌کنه).
 
-![[Pasted image 20240202190725.png]]
+---
 
-این دستور در mysql وجود ندارد و معادل آن union هست در mysql
+## 12. Key Interview Talking Points
 
-Union clause :
-برای ترکیب کردن و اجتمال سلک ها و کوئری های مختلف میگیریم از union استفاده میکنیم.
-شرایط : باید از هر دو جدول به تعداد مساوی رکورد گرفته شود.
-این شرایط برای نوع دیتا هم صدق میکنند.
-نکته : در این روش دیتای تکراری حذف میشوند.
+- **Transaction و ACID**: Atomicity (همه یا هیچ)، Consistency (پایدار قبل و بعد)، Isolation (انزوا)، Durability (ماندگاری بعد از Commit). تراکنش در بیزنس Begin/Commit/Rollback و روی دیتابیس اجرا می‌شه.
+- **Full Join**: همهٔ رکوردهای هر دو جدول؛ عدم تطابق → NULL. در MySQL با UNION شبیه‌سازی می‌شه.
+- **UNION** تکراری حذف می‌کنه؛ **UNION ALL** تکراری نگه می‌داره و معمولاً سریع‌تره.
+- **WHERE** روی رکوردها؛ **HAVING** روی گروه‌ها (بعد از GROUP BY).
+- **TRUNCATE** همهٔ رکوردها بدون شرط، سریع و آزاد کردن فضا؛ **DELETE** با شرط و با لاگ/Trigger.
+- **Subquery**: یک SELECT داخل شرط یا داخل دستور دیگر؛ برای INSERT/UPDATE/DELETE شرط‌دار بر اساس نتیجهٔ کوئری دیگر.
 
-```sql
-SELECT column1 [, column2 ]
-FROM table1 [, table2 ]
-[WHERE condition]
+---
 
-UNION
+## 13. When to Use / When NOT to Use
 
-SELECT column1 [, column2 ]
-FROM table1 [, table2 ]
-[WHERE condition]
-```
+- **Transaction**: وقتی چند دستور باید با هم همه اجرا بشن یا هیچ‌کدوم؛ بدون تراکنش احتمال نیمه‌کاره موندن است.
+- **Full Join**: وقتی می‌خوای همهٔ رکوردهای هر دو طرف را ببینی حتی بدون تطابق؛ در MySQL از UNION استفاده کن.
+- **UNION ALL** وقتی تکراری برایت مهم نیست و می‌خوای سریع‌تر باشه؛ **UNION** وقتی یکتا بودن نتیجه مهمه.
+- **TRUNCATE** برای خالی کردن کامل جدول؛ برای حذف با شرط از **DELETE** استفاده کن.
+- **HAVING** وقتی شرط روی گروه یا تابع تجمعی است؛ برای فیلتر روی رکورد از **WHERE** استفاده کن.
 
-![[Pasted image 20240202191419.png]]
+---
 
-نتیجه:
-![[Pasted image 20240202191438.png]]
+## منابع
 
-Union All :
-امکان اینکه دیتای تکراری هم داشته باشیم به ما میدهد.
+- [SQL-Advanced (GitHub)](https://github.com/gitmag-group-admin/SQL-Advanced?tab=readme-ov-file)
+- [آموزش پیشرفته SQL - sub queries (YouTube)](https://www.youtube.com/watch?v=mmijvRWozqw&list=PL1xdRbCBrpoel9XleokPKxF0mRzc3YLB2&index=15)
+- [Course Overview - DB (YouTube)](https://www.youtube.com/watch?v=ix5nDOfT1Kk&list=PLKwsMoYJqrLIUfclTe45Q_WFfyelJQbs4)
 
+---
 
-Alias :
-زمانی که ستون هایی با نام مشابه داریم به کمک Alias میتوانیم بین دو اسم تمایز قائل شویم.
-این اسامی به صورت موقت هست و بعد از بسته شدن در دسترس نیستند.
-برای  نام جداول هم میتوانیم استفاده کنیم.
-``` sql
-SELECT column1, column2....
-FROM table_name AS alias_name
-WHERE [condition];
-```
-
-```sql
-SELECT column_name AS alias_name
-FROM table_name
-WHERE [condition];
-```
-
-Alter :
-در شرایطی که در امکان تغییرات روی جداول را بخواهیم از این مورد استفاده میکنیم.
-مثلا ستونی حذف شود اضافه شود تایپ آن تغییر کند و...
-از alter استفاده میکنیم.
-
-## Syntax
-
-The basic syntax of an ALTER TABLE command to add a **New Column** in an existing table is as follows.
-
-```
-ALTER TABLE table_name ADD column_name datatype;
-```
-
-The basic syntax of an ALTER TABLE command to **DROP COLUMN** in an existing table is as follows.
-
-```
-ALTER TABLE table_name DROP COLUMN column_name;
-```
-
-The basic syntax of an ALTER TABLE command to change the **DATA TYPE** of a column in a table is as follows.
-
-```
-ALTER TABLE table_name MODIFY COLUMN column_name datatype;
-```
-
-The basic syntax of an ALTER TABLE command to add a **NOT NULL** constraint to a column in a table is as follows.
-
-```
-ALTER TABLE table_name MODIFY column_name datatype NOT NULL;
-```
-
-The basic syntax of ALTER TABLE to **ADD UNIQUE CONSTRAINT** to a table is as follows.
-
-```
-ALTER TABLE table_name 
-ADD CONSTRAINT MyUniqueConstraint UNIQUE(column1, column2...);
-```
-
-The basic syntax of an ALTER TABLE command to **ADD CHECK CONSTRAINT** to a table is as follows.
-
-```
-ALTER TABLE table_name 
-ADD CONSTRAINT MyUniqueConstraint CHECK (CONDITION);
-```
-
-The basic syntax of an ALTER TABLE command to **ADD PRIMARY KEY** constraint to a table is as follows.
-
-```
-ALTER TABLE table_name 
-ADD CONSTRAINT MyPrimaryKey PRIMARY KEY (column1, column2...);
-```
-
-The basic syntax of an ALTER TABLE command to **DROP CONSTRAINT** from a table is as follows.
-
-```
-ALTER TABLE table_name 
-DROP CONSTRAINT MyUniqueConstraint;
-```
-
-If you're using MySQL, the code is as follows.
-
-```
-ALTER TABLE table_name 
-DROP INDEX MyUniqueConstraint;
-```
-
-The basic syntax of an ALTER TABLE command to **DROP PRIMARY KEY** constraint from a table is as follows.
-
-```
-ALTER TABLE table_name 
-DROP CONSTRAINT MyPrimaryKey;
-```
-
-If you're using MySQL, the code is as follows.
-
-```
-ALTER TABLE table_name 
-DROP PRIMARY KEY;
-```
-
-
-
-Truncate :
-زمانی که لازم هست دیتای داخل یک جدول به صورت کلی پاک شود تا تغییراتی درون آن اتفاق بیوفتد. از این دستور استفاده میکنیم.
-غیر معقولانه ترین حالت استفاده از drop table یا delete table هست.
-میتوانیم برای دستور delete شرط بزاریم و بگیم کدوم ستون را پاک کند.
-اما truncate شرط پذیر نیست و همه رکورد هارا پاک میکند.
-زمانی که از delete استفاده میکنیم فضایی که جدول و رکورد های ان اشغال کرده بعد از حذف شدن آزاد نمیشود. اما truncate فضای قبل را آزاد میکند و مجددا قابل استفاده است.
-Truncate به مراتب سریع تر از delete هست.
-در کل زمانی که میخواهیم ساختار یک جدول رو تغییر بدیم اما تمام رکورد هارا به علاوه فصایی که اشغال کردن رو پاک کنیم از truncate استفاده میکنیم.
-
-Having :
-زمانی که یک شرط و در کوئری بخواهیم بیاریم از having استفاده میکنیم.
-تفاوت آن با where این هست که دستور where جایی اعمال میشود که مقداری در جداول select شده هستند و شرایط خاصی برای واکشی داریم.
-اما having زمانی استفاده میشود که میخواهیم دیتا های مد نظرمون رو گروه بندی کنیم و شرایطی روی گروهی از اطاعات قرار دهیم.
-where روی تمام داده اعمال میشود. اما having بعد از گروه بندی یا عبارت Group By صدا زده میشود.
-
-```sql
-SELECT
-FROM
-WHERE
-GROUP BY
-HAVING
-ORDER BY
-```
-
-```sql
-SELECT column1, column2
-FROM table1, table2
-WHERE [ conditions ]
-GROUP BY column1, column2
-HAVING [ conditions ]
-ORDER BY column1, column2
-```
-
-![[Pasted image 20240202202716.png]]
-
-Transactions :
-زمانی که میخواهیم مجموعه از دستورات مربط را بخواهیم اجرا کنیم تا به یک عملیات واحد برسیم.
-Transaction control
-commit -> To save the changes
-RollBack -> To roll back the changes
-SavePoint -> Creates points within the groups of transactions in wich RollBack
-
-SetTransaction -> Places a name on transaction
-
-
-## Properties of Transactions
-
-Transactions have the following four standard properties, usually referred to by the acronym **ACID**.
-
-- **Atomicity** − ensures that all operations within the work unit are completed successfully. Otherwise, the transaction is aborted at the point of failure and all the previous operations are rolled back to their former state.
-    
-- **Consistency** − ensures that the database properly changes states upon a successfully committed transaction.
-    
-- **Isolation** − enables transactions to operate independently of and transparent to each other.
-    
-- **Durability** − ensures that the result or effect of a committed transaction persists in case of a system failure.
-سینتکس ها :
-
-
-
-
-
-
-
-Sub queries :
-زمانی که دو جدول داریم و میخواهیم روی جدول اول عملیاتی انجام دهیم که تحت تاثیر جدول دوم هست.
-مثلا از دیتابیس بک اپی گرفتیم و حالا دیتابیس پاک شده حالا اطلاعات جدول دیتابیس پاک شده میتوان با استفاده از بک آپ باز گردانی کنیم.
-
-```sql
-SELECT column_name [, column_name ]
-FROM   table1 [, table2 ]
-WHERE  column_name OPERATOR
-   (SELECT column_name [, column_name ]
-   FROM table1 [, table2 ]
-   [WHERE])
-```
-
-
-![[Pasted image 20240203234105.png]]
-
-
-insert 
-```
-INSERT INTO CUSTOMERS_BKP
-   SELECT * FROM CUSTOMERS 
-   WHERE ID IN (SELECT ID 
-   FROM CUSTOMERS) ;
-```
-
-UPDATE :
-```
-UPDATE CUSTOMERS
-   SET SALARY = SALARY *  0.25 WHERE AGE IN (SELECT AGE FROM CUSTOMERS_BKP
-      WHERE AGE >=  27  );
-```
-
-DELETE :
-```
-DELETE FROM CUSTOMERS
-   WHERE AGE IN (SELECT AGE FROM CUSTOMERS_BKP
-      WHERE AGE >=  27  );
-```
-
-
+این فایل **مکمل** **[[SQL]]** و **[[Database]]** است. برای تیونینگ و Plan به **[[Tuning Database]]** و **[[Explain Plan]]** مراجعه کن.
