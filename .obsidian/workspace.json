@@ -83,16 +83,58 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "C#/Concurrency/High-Throughput Distributed Systems - از Single Process تا Multi-Pod-1.md",
+                "file": "C#/Concurrency/Async await.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "High-Throughput Distributed Systems - از Single Process تا Multi-Pod-1"
+              "title": "Async await"
+            }
+          },
+          {
+            "id": "f5b10cf5b2398b7c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "hyperAhan/Pricing/01-Pricing-Business-Discovery.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "01-Pricing-Business-Discovery"
+            }
+          },
+          {
+            "id": "94ec5533c3e8d4a2",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "hyperAhan/Pricing/Pricing Application Use Cases.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Pricing Application Use Cases"
+            }
+          },
+          {
+            "id": "244652dd57b8c89e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "hyperAhan/CalculationEngine/Calculation Engine Business Discovery.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Calculation Engine Business Discovery"
             }
           }
         ],
-        "currentTab": 5
+        "currentTab": 8
       }
     ],
     "direction": "vertical"
@@ -251,55 +293,56 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "33b3cfd1011e1b7e",
+  "active": "244652dd57b8c89e",
   "lastOpenFiles": [
-    "C#/Concurrency/Concurrency.md",
-    "C#/Concurrency/High-Throughput Distributed Systems - از Single Process تا Multi-Pod-1.md",
-    "C#/Concurrency/Classic Distributed Concurrency Problems - Real Incidents.md",
-    "C#/Concurrency/Message Queue Internals - RabbitMQ and Kafka Deep Dive.md",
-    "C#/Concurrency/Kubernetes-.NET Specific Concurrency Pitfalls - Real Cases.md",
-    "C#/Concurrency/Concurrency - Supplementary.md",
-    "C#/Concurrency/Concurrency and multi Threading.md",
-    "Architecture/Concepts/Scalability.md",
-    "Untitled.md",
+    "hyperAhan/CalculationEngine/Calculation Engine Business Facts v1.0.md",
+    "hyperAhan/CalculationEngine/Calculation Engine Business Discovery.md",
+    "hyperAhan/Pricing/01-Pricing-Business-Discovery.md",
+    "hyperAhan/Pricing/Pricing Business Facts.md",
+    "hyperAhan/Pricing/Pricing Application Use Cases.md",
+    "hyperAhan/Pricing/Pricing Implementation Prompt v1.0.md",
+    "hyperAhan/Pricing/Pricing Domain Model.md",
+    "hyperAhan/Pricing/Pricing Domain Implementation Guide.md",
+    "hyperAhan/Pricing/Pricing Calculation Rules.md",
+    "hyperAhan/HANDOVER PACKAGE.md",
+    "hyperAhan/DECISION LOG HyperAhan.md",
+    "C#/Concurrency/Async await.md",
+    "hyperAhan/CalculationEngine",
+    "Untitled 1.canvas",
+    "Untitled.canvas",
+    "hyperAhan/Pricing/Untitled.md",
+    "C#/try catch finally.md",
+    "hyperAhan/Pricing",
+    "hyperAhan/UBIQUITOUS LANGUAGE HyperAhan.md",
+    "hyperAhan/Catalog 1/19-Implementation-Guideline.md",
+    "hyperAhan/Catalog 1/18-Application-Contracts.md",
+    "hyperAhan/Catalog 1/17-Domain-Lifecycle.md",
+    "hyperAhan/Catalog 1/16-Ubiquitous-Language.md",
+    "hyperAhan/Catalog 1/15-Domain-Validation-Rules.md",
+    "hyperAhan/Catalog 1/14-Aggregate-Creation-Rules.md",
+    "hyperAhan/Catalog 1/13-Repository-Contracts.md",
+    "hyperAhan/Catalog 1/12-Domain-Behaviors.md",
+    "hyperAhan/Catalog 1/11-Value-Objects.md.md",
+    "hyperAhan/Catalog 1/10-Order-Unit.md",
+    "hyperAhan/Catalog 1/09-Factory-Aggregate.md",
+    "hyperAhan/Catalog 1",
+    "hyperAhan/Catalog",
+    "hyperAhan",
     "Pasted image 20260410053326.png",
-    "Architecture/Concepts/Availability.md",
     "Architecture/Concepts",
-    "Architecture/Domain-Driven Design.md",
-    "Architecture/Architecture.md",
     "Pasted image 20260328080021.png",
     "Pasted image 20260328070206.png",
     "Pasted image 20260327075615.png",
     "Pasted image 20260327074443.png",
     "Pasted image 20260327072437.png",
     "Pasted image 20260327070916.png",
-    "Architecture/Conway's Law.md",
     "Architecture/Images/Pasted image 20260312055943.png",
     "Architecture/Images/Pasted image 20260312051014.png",
     "Architecture/Images/Pasted image 20260311121731.png",
-    "Architecture/Types of Coupling in Software Development.md",
     "Architecture/Images",
-    "Architecture/The Pragmatic Programmer.md",
-    "Architecture/TCP-IP.md",
-    "Architecture/TCP.md",
-    "Architecture/DNS.md",
-    "Architecture/CDN.md",
-    "Architecture/Separation of Concern vs Single Responsibility Principle.md",
-    "Architecture/Software Architecture 101- Classification- Principles- and Choices.md",
-    "Architecture/Layered - N-Tier.md",
-    "Architecture/OSI.md",
-    "Architecture/IP.md",
-    "Architecture/UDP.md",
-    "Architecture/Clean Architecture.md",
     "Architecture Cource",
     "Untitled.base",
-    "Untitled.canvas",
-    "Untitled 1.canvas",
     "Untitled 4.base",
-    "Untitled 3.base",
-    "Untitled 2.base",
-    "Untitled 1.base",
-    "Mentoring",
     "C#/Untitled 1.canvas",
     "C#/Untitled.canvas",
     "C#/Untitled 2.canvas",

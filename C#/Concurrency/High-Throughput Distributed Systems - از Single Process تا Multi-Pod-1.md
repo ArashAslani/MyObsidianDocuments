@@ -395,3 +395,6 @@ using var activity = ActivitySource.StartActivity(
 - **Clean Architecture** نقشش اینه که همهٔ این تصمیم‌های infrastructure (RabbitMQ, Redis, connection pooling) رو پشت Interfaceهای Application/Domain layer پنهان کنه، تا اگه فردا از RabbitMQ به Kafka عوض کردی، Domain Logic (مثلاً «چطور موجودی کم می‌شه») دست‌نخورده بمونه.
 
 هر بخش از این فایل رو می‌تونی به یه سؤال مصاحبه وصل کنی: «چرا Outbox Pattern؟»، «فرق Distributed Lock و Optimistic Concurrency کِی کدوم؟»، «چطور Cache Stampede رو مدیریت می‌کنی؟» — اگه بتونی هر کدوم رو با یه trade-off واقعی (نه فقط تعریف) جواب بدی، دفاع از این عنوان قوی می‌شه.
+
+
+
